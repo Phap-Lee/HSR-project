@@ -14,9 +14,15 @@ export interface CharacterBase {
     taunt: number;
     maxEnergy: number;
     currentEnergy: number;
-    traces: Record<StatKey, Record<StatType, number>>[];
+    traces: TraceEntry[];
 
     lc: LightCone;
 
     
 }
+
+export type TraceEntry = {
+    key: StatKey;
+    type: StatType;
+    value: number;
+};
