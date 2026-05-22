@@ -22,6 +22,7 @@ export const LEVEL_STATS: Record<Level, LevelStats> = {
 export class Dan_Heng implements CharacterBase {
     id: string = 'dan_heng_01';
     name: string = 'Dan Heng';
+    stars: 4 | 5 = 4;
     path: Paths = PathsEnum.Hunt;
     element: Elements = 'Wind';
     level: Level = 1;

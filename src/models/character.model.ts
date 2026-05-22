@@ -4,6 +4,7 @@ import { LightCone } from './lightcone.model';
 export interface CharacterBase {
     id: string;
     name: string;
+    stars: 4 | 5;
     path: Paths;
     element: Elements;
     level: Level;
