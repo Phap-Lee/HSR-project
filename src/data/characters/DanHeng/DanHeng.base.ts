@@ -32,11 +32,23 @@ export class Dan_Heng implements CharacterBase {
     taunt: number = 75;
     maxEnergy: number = 100;
     currentEnergy: number = 0;
+    err: number = 0;
     traces: TraceEntry[] = [
         { key: 'Atk', type: 'percent', value: 18 },
         { key: 'Def', type: 'percent', value: 12.5 },
         { key: 'Wind_DMG_Bonus', type: 'percent', value: 22.4 }
     ]
 
-    lc: LightCone = void;
+    lc?: LightCone;
+
+    constructor(level: Level = 1, lc?: LightCone) {
+        this.level = level;
+        const stats = LEVEL_STATS[level];
+        this.hp = stats.hp;
+        this.atk = stats.atk;
+        this.def = stats.def;
+        this.currentEnergy = this.maxEnergy / 2;
+
+        this.lc = lc;
+    }
 }

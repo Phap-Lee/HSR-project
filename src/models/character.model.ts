@@ -14,9 +14,10 @@ export interface CharacterBase {
     taunt: number;
     maxEnergy: number;
     currentEnergy: number;
+    err: number;
     traces: TraceEntry[];
 
-    lc: LightCone;
+    lc?: LightCone;
 
     
 }
