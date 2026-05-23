@@ -1,3 +1,6 @@
+// src\models\type.ts
+
+// Paths
 export const PathsEnum = {
   Hunt: 'The Hunt',
   Preservation: 'The Preservation',
@@ -12,9 +15,11 @@ export const PathsEnum = {
 
 export type Paths = typeof PathsEnum[keyof typeof PathsEnum];
 
+// Elements
 export type Elements =
 | 'Fire' | 'Ice' | 'Imaginary' | 'Physical' | 'Quantum' | 'Lightning' | 'Wind';
 
+// Stats Types
 export type StatKey =
 | 'Hp' | 'Atk' | 'Def'
 | 'Spd' | 'Cr' | 'Cdmg'
