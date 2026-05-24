@@ -32,8 +32,10 @@ export type StatKey =
 | 'Basic_Res_Pen' | 'Skill_Res_Pen' | 'Ultimate_Res_Pen' | 'Fua_Res_Pen'
 | 'All_Res_Pen';
 
+// Flat Stat or Percent Stat
 export type StatType = 'flat' | 'percent';
 
+// Level Incriments
 export type Level =
 1 | 20
 | '20+' | 30
@@ -43,10 +45,12 @@ export type Level =
 | '60+' | 70
 | '70+' | 80;
 
+// Level Stats
 export type LevelStats = {
     hp: number;
     atk: number;
     def: number
 };
 
+// Ability Types
 export type AbilityType = 'Basic' | 'Skill' | 'Ultimate' | 'Fua' | 'Technique' | 'Talent';

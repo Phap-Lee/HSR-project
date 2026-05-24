@@ -1,6 +1,9 @@
+//src\models\character.model.ts
+
 import type { Paths, Elements, Level, StatKey, StatType } from './type'
 import { LightCone } from './lightcone.model';
 
+// Base character interface
 export interface CharacterBase {
     id: string;
     name: string;
@@ -23,6 +26,7 @@ export interface CharacterBase {
     
 }
 
+// Trace entry interface
 export type TraceEntry = {
     key: StatKey;
     type: StatType;
