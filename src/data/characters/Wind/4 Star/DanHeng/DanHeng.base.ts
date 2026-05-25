@@ -1,6 +1,6 @@
-import { type Paths, type Elements, type Level, type StatKey, type StatType, type LevelStats, PathsEnum } from '../../../models/type'
-import { CharacterBase, type TraceEntry } from "../../../models/character.model";
-import { LightCone } from '../../../models/lightcone.model';
+import { type Paths, type Elements, type Level, type StatKey, type StatType, type LevelStats, PathsEnum } from '../../../../../models/type'
+import { CharacterBase, type TraceEntry } from "../../../../../models/character.model";
+import { LightCone } from '../../../../../models/lightcone.model';
 
 export const LEVEL_STATS: Record<Level, LevelStats> = {
     1: {hp: 120, atk: 774, def: 54},
@@ -45,11 +45,13 @@ export class Dan_Heng implements CharacterBase {
     constructor(level: Level = 1, lc?: LightCone) {
         this.level = level;
         const stats = LEVEL_STATS[level];
-        this.hp = stats.hp;
-        this.atk = stats.atk;
-        this.def = stats.def;
+        this.lc = lc;
+
+        this.hp = stats.hp + (this.lc?.hp ?? 0);
+        this.atk = stats.atk + (this.lc?.atk ?? 0);
+        this.def = stats.def + (this.lc?.def ?? 0);
         this.currentEnergy = this.maxEnergy / 2;
 
-        this.lc = lc;
+
     }
 }

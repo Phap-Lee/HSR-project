@@ -54,3 +54,4 @@ export type LevelStats = {
 
 // Ability Types
 export type AbilityType = 'Basic' | 'Skill' | 'Ultimate' | 'Fua' | 'Technique' | 'Talent';
+export type AbilityTarget = 'Single' | 'Blast' | 'Aoe'
