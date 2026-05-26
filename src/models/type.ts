@@ -2,15 +2,15 @@
 
 // Paths
 export const PathsEnum = {
-  Hunt: 'The Hunt',
-  Preservation: 'The Preservation',
-  Erudition: 'The Erudition',
-  Abundance: 'The Abundance',
-  Harmony: 'The Harmony',
-  Nihility: 'The Nihility',
-  Destruction: 'The Destruction',
-  Rememberance: 'The Rememberance',
-  Elation: 'The Elation'
+    Hunt: 'The Hunt',
+    Preservation: 'The Preservation',
+    Erudition: 'The Erudition',
+    Abundance: 'The Abundance',
+    Harmony: 'The Harmony',
+    Nihility: 'The Nihility',
+    Destruction: 'The Destruction',
+    Rememberance: 'The Rememberance',
+    Elation: 'The Elation'
 } as const;
 
 export type Paths = typeof PathsEnum[keyof typeof PathsEnum];
@@ -34,38 +34,64 @@ export type StatKey =
 | 'All_DMG_Bonus'
 // All Res Pens
 | 'Fire_Res_Pen' | 'Ice_Res_Pen' | 'Imaginary_Res_Pen' | 'Physical_Res_Pen' | 'Quantam_Res_Pen' | 'Lightning_Res_Pen' | 'Wind_Res_Pen'
-| 'Basic_Res_Pen' | 'Skill_Res_Pen' | 'Ultimate_Res_Pen' | 'Fua_Res_Pen' | 'Break_DMG_Pen'
+| 'Basic_Res_Pen' | 'Skill_Res_Pen' | 'Ultimate_Res_Pen' | 'Fua_Res_Pen' | 'Break_Res_Pen'
 | 'All_Res_Pen'
+// All Defence Ignore
+| 'Fire_Ignore' | 'Ice_Ignore' | 'Imaginary_Ignore' | 'Physical_Ignore' | 'Quantam_Ignore' | 'Lightning_Ignore' | 'Wind_Ignore'
+| 'Basic_Ignore' | 'Skill_Ignore' | 'Ultimate_Ignore' | 'Fua_Ignore' | 'Break_Ignore'
+| 'All_Ignore'
 // All Resistances
 | 'Fire_Res' | 'Ice_Res' | 'Imaginary_Res' | 'Physical_Res' | 'Quantam_Res' | 'Lightning_Res' | 'Wind_Res'
-| 'All_Res';
+| 'All_Res' | 'Dmg_Mitigation'
+// Debuffs
+| 'Fire_Vulnerability' | 'Ice_Vulnerability' | 'Imaginary_Vulnerability' | 'Physical_Vulnerability' | 'Quantam_Vulnerability' | 'Lightning_Vulnerability' | 'Wind_Vulnerability'
+| 'Basic_Vulnerability' | 'Skill_Vulnerability' | 'Ultimate_Vulnerability' | 'Fua_Vulnerability' | 'Break_Vulnerability'
+| 'All_Vulnerability'
+| 'Weaken' | 'Def_Down';
 
 export interface DamageBonusGroup {
-  all?: number;
-  basic?: number;
-  skill?: number;
-  ultimate?: number;
-  fua?: number;
-  element?: ElementMap<number>;
+    all?: number;
+    basic?: number;
+    skill?: number;
+    ultimate?: number;
+    fua?: number;
+    dot?: number;
+    element?: ElementMap<number>;
 }
 
 export interface ResPenGroup {
-  all?: number;
-  element?: ElementMap<number>;
+    all?: number;
+    basic?: number;
+    skill?: number;
+    ultimate?: number;
+    fua?: number;
+    dot?: number;
+    element?: ElementMap<number>;
 }
 
 export interface ResistanceGroup {
-  all?: number;
-  element?: ElementMap<number>;
+    all?: number;
+    element?: ElementMap<number>;
 }
 
 export interface DefenceIgnoreGroup {
-  all?: number;
-  basic?: number;
-  skill?: number;
-  ultimate?: number;
-  fua?: number;
-  element?: ElementMap<number>;  
+    all?: number;
+    basic?: number;
+    skill?: number;
+    ultimate?: number;
+    fua?: number;
+    dot?: number;
+    element?: ElementMap<number>;  
+}
+
+export interface VulnerabilityGroup {
+    all?: number;
+    basic?: number;
+    skill?: number;
+    ultimate?: number;
+    fua?: number;
+    dot?: number;
+    element?: ElementMap<number>; 
 }
 
 // Flat Stat or Percent Stat

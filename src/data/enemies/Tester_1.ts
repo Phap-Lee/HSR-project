@@ -1,7 +1,7 @@
 import { CharacterBase } from "../../models/character.model";
 import { EnemyBase } from "../../models/enemy.model";
 import { Modifier } from "../../models/modifier.model";
-import { Elements } from "../../models/type";
+import { Elements, ResistanceGroup, VulnerabilityGroup } from "../../models/type";
 import * as utils from "../../sim/utils/utils";
 import * as avHandler from "../../sim/calculations/actionvalue";
 
@@ -21,15 +21,8 @@ export class Tester implements EnemyBase {
     base_av: number = 0;
     current_av: number = 0;
 
-    res: number = 0;
-    all_res: number = 0;
-    fire_res: number = 0;
-    ice_res: number = 0;
-    imaginary_res: number = 0;
-    physical_res: number = 0;
-    quantum_res: number = 0;
-    lightning_res: number = 0;
-    wind_res: number = 0;
+    resistances?: ResistanceGroup | undefined;
+    vulnerability?: VulnerabilityGroup | undefined;
 
     ehr: number = 0;
     er: number = 0;
@@ -39,6 +32,7 @@ export class Tester implements EnemyBase {
         'Quantum',
         'Lightning'
     ];
+    migigations: [] = [];
     modifiers: Modifier<EnemyBase | CharacterBase, EnemyBase | CharacterBase>[] = [];
 
     base_toughness: number = 100;
@@ -58,22 +52,24 @@ export class Tester implements EnemyBase {
         this.base_av = avHandler.ActionValueSetter(this);
         this.current_av = this.base_av;
 
-        const allElements: Elements[] = ['Fire', 'Ice', 'Imaginary', 'Physical', 'Quantum', 'Lightning', 'Wind'];
-        const resMap = {
-            Fire: 'fire_res',
-            Ice: 'ice_res',
-            Imaginary: 'imaginary_res',
-            Physical: 'physical_res',
-            Quantum: 'quantum_res',
-            Lightning: 'lightning_res',
-            Wind: 'wind_res'
-        } as const;
+        const allElements: Elements[] = ['Fire','Ice','Imaginary','Physical','Quantum','Lightning','Wind'];
+        const elementRes: Partial<Record<Elements, number>> = {};
+        for (const el of allElements) elementRes[el] = this.weakness.includes(el) ? 0 : 20;
+        this.resistances = { all: 0, element: elementRes };
 
-        for (const element of allElements) {
-            if (!this.weakness.includes(element)) {
-                this[resMap[element]] = 20;
-            }
-        };
+        const elementVul: Partial<Record<Elements, number>> = {};
+        for (const el of allElements) {
+            elementVul[el] = 0;
+        }
+        this.vulnerability = {
+            all: 0,
+            basic: 0,
+            skill: 0,
+            ultimate: 0,
+            fua: 0,
+            element: elementVul
+        }
+
         this.toughness = this.base_toughness;
     }
 }

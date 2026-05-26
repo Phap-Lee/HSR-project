@@ -6,6 +6,7 @@ import { UnitBase } from "./unit.model";
 export interface EnemyBase extends UnitBase {
     level: 80 | 90;
     weakness: Elements[];
+    migigations: [];
     base_toughness: number;
     toughness: number;
     spd_multi: number;

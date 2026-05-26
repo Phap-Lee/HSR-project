@@ -1,8 +1,7 @@
 //src\sim\utils\ultils.ts
 
 import { UnitBase } from "../../models/unit.model";
-import { type StatKey } from "../../models/type";
-import { EnemyBase } from "../../models/enemy.model";
+import { Level, type StatKey } from "../../models/type";
 
 type Totals = { flat: number; percent: number };
 
@@ -25,6 +24,6 @@ export function getEffectiveStat(unit: UnitBase, stat: StatKey, baseValue: numbe
   return Math.max(0, baseValue * (1 + percent / 100) + flat);
 }
 
-export function isBroken(enemy: EnemyBase) {
-    return enemy.toughness <= 0
+export function getLevelNumber(level: Level): number {
+  return parseInt(String(level), 10);
 }

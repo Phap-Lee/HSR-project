@@ -2,7 +2,7 @@
 
 import { Modifier } from './modifier.model';
 import { TraceEntry } from './character.model';
-import { DamageBonusGroup, ResPenGroup, ResistanceGroup } from './type';
+import { DamageBonusGroup, DefenceIgnoreGroup, ResPenGroup, ResistanceGroup, VulnerabilityGroup } from './type';
 
 export interface UnitBase {
     id: string;
@@ -17,12 +17,12 @@ export interface UnitBase {
     spd: number;
     base_av: number;
     current_av: number;
-    cr?: number;
-    cdmg?: number;
 
     damageBonuses?: DamageBonusGroup;
     resPen?: ResPenGroup;
+    defIgnore?: DefenceIgnoreGroup;
     resistances?: ResistanceGroup;
+    vulnerability?: VulnerabilityGroup;
 
     ehr: number;
     er: number;
