@@ -1,6 +1,6 @@
 //src\data\characters\Wind\4 Star\DanHeng\DanHeng.base.ts
 
-import { type Paths, type Elements, type Level, type StatKey, type StatType, type LevelStats, PathsEnum } from '../../../../../models/type'
+import { type Paths, type Elements, type Level, type StatKey, type StatType, type LevelStats, PathsEnum, DamageBonusGroup, ResPenGroup } from '../../../../../models/type'
 import { CharacterBase, type TraceEntry } from "../../../../../models/character.model";
 import { LightCone } from '../../../../../models/lightcone.model';
 import { EnemyBase } from '../../../../../models/enemy.model';
@@ -43,17 +43,11 @@ export class Dan_Heng implements CharacterBase {
     base_av: number = 0;
     current_av: number = 0;
 
-    all_bonus: number = 0;
-    wind_bonus: number = 0;
-    basic_bonus: number = 0;
-    skill_bonus: number = 0;
-    ult_bonus: number = 0;
+    cr: number = 5;
+    cdmg: number = 50;
 
-    all_pen: number = 0;
-    wind_pen: number = 0;
-    basic_pen: number = 0;
-    skill_pen: number = 0;
-    ult_pen: number = 0;
+    damageBonuses?: DamageBonusGroup | undefined;
+    resPen?: ResPenGroup | undefined;
 
     base_taunt: number = 3;
     taunt_multi: number = 0;
@@ -89,17 +83,29 @@ export class Dan_Heng implements CharacterBase {
         this.base_av = avHandler.ActionValueSetter(this);
         this.current_av = this.base_av;
 
-        this.all_bonus = utils.getTotalsForStat(this, 'All_DMG_Bonus').percent;
-        this.wind_bonus = utils.getTotalsForStat(this, 'Wind_DMG_Bonus').percent + this.all_bonus;
-        this.basic_bonus = utils.getTotalsForStat(this, 'Basic_DMG_Bonus').percent + this.all_bonus;
-        this.skill_bonus = utils.getTotalsForStat(this, 'Skill_DMG_Bonus').percent + this.all_bonus;
-        this.ult_bonus = utils.getTotalsForStat(this, 'Ultimate_DMG_Bonus').percent + this.all_bonus;
+        const allBonus = utils.getTotalsForStat(this, 'All_DMG_Bonus').percent;
+        const windBonus = utils.getTotalsForStat(this, 'Wind_DMG_Bonus').percent;
+        const basicBonus = utils.getTotalsForStat(this, 'Basic_DMG_Bonus').percent;
+        const skillBonus = utils.getTotalsForStat(this, 'Skill_DMG_Bonus').percent;
+        const ultBonus = utils.getTotalsForStat(this, 'Ultimate_DMG_Bonus').percent;
+        const fuaBonus = utils.getTotalsForStat(this, 'Fua_DMG_Bonus').percent;
 
-        this.all_pen = utils.getTotalsForStat(this, 'All_Res_Pen').percent;
-        this.wind_pen = utils.getTotalsForStat(this, 'Wind_Res_Pen').percent + this.all_pen;
-        this.basic_pen = utils.getTotalsForStat(this, 'Wind_Res_Pen').percent + this.all_pen;
-        this.skill_pen = utils.getTotalsForStat(this, 'Skill_Res_Pen').percent + this.all_pen;
-        this.ult_pen = utils.getTotalsForStat(this, 'Ultimate_Res_Pen').percent + this.all_pen;
+        this.damageBonuses = {
+            all: allBonus,
+            basic: basicBonus,
+            skill: skillBonus,
+            ultimate: ultBonus,
+            fua: fuaBonus,
+            element: { [this.element]: windBonus }
+        };
+
+        const allPen = utils.getTotalsForStat(this, 'All_Res_Pen').percent;
+        const windPen = utils.getTotalsForStat(this, 'Wind_Res_Pen').percent;
+
+        this.resPen = {
+            all: allPen,
+            element: { [this.element]: windPen }
+        };
 
         this.taunt = this.base_taunt  * (1 + (this.taunt_multi / 100));
         this.currentEnergy = this.maxEnergy / 2;

@@ -19,6 +19,8 @@ export type Paths = typeof PathsEnum[keyof typeof PathsEnum];
 export type Elements =
 | 'Fire' | 'Ice' | 'Imaginary' | 'Physical' | 'Quantum' | 'Lightning' | 'Wind';
 
+export type ElementMap<T> = Partial<Record<Elements, T>>;
+
 // Stats Types
 export type StatKey =
 // Basic Stats
@@ -28,15 +30,43 @@ export type StatKey =
 | 'Be' | 'Err'
 // All Damage Bonuses
 | 'Fire_DMG_Bonus' | 'Ice_DMG_Bonus' | 'Imaginary_DMG_Bonus' | 'Physical_DMG_Bonus' | 'Quantum_DMG_Bonus' | 'Lightning_DMG_Bonus' | 'Wind_DMG_Bonus'
-| 'Basic_DMG_Bonus' | 'Skill_DMG_Bonus' | 'Ultimate_DMG_Bonus' | 'Fua_DMG_Bonus'
+| 'Basic_DMG_Bonus' | 'Skill_DMG_Bonus' | 'Ultimate_DMG_Bonus' | 'Fua_DMG_Bonus' | 'Break_DMG_Bonus'
 | 'All_DMG_Bonus'
 // All Res Pens
 | 'Fire_Res_Pen' | 'Ice_Res_Pen' | 'Imaginary_Res_Pen' | 'Physical_Res_Pen' | 'Quantam_Res_Pen' | 'Lightning_Res_Pen' | 'Wind_Res_Pen'
-| 'Basic_Res_Pen' | 'Skill_Res_Pen' | 'Ultimate_Res_Pen' | 'Fua_Res_Pen'
+| 'Basic_Res_Pen' | 'Skill_Res_Pen' | 'Ultimate_Res_Pen' | 'Fua_Res_Pen' | 'Break_DMG_Pen'
 | 'All_Res_Pen'
 // All Resistances
 | 'Fire_Res' | 'Ice_Res' | 'Imaginary_Res' | 'Physical_Res' | 'Quantam_Res' | 'Lightning_Res' | 'Wind_Res'
 | 'All_Res';
+
+export interface DamageBonusGroup {
+  all?: number;
+  basic?: number;
+  skill?: number;
+  ultimate?: number;
+  fua?: number;
+  element?: ElementMap<number>;
+}
+
+export interface ResPenGroup {
+  all?: number;
+  element?: ElementMap<number>;
+}
+
+export interface ResistanceGroup {
+  all?: number;
+  element?: ElementMap<number>;
+}
+
+export interface DefenceIgnoreGroup {
+  all?: number;
+  basic?: number;
+  skill?: number;
+  ultimate?: number;
+  fua?: number;
+  element?: ElementMap<number>;  
+}
 
 // Flat Stat or Percent Stat
 export type StatType = 'flat' | 'percent';
@@ -59,5 +89,5 @@ export type LevelStats = {
 };
 
 // Ability Types
-export type AbilityType = 'Basic' | 'Skill' | 'Ultimate' | 'Fua' | 'Technique' | 'Talent' | 'Dot' | 'Extra' | 'True';
+export type AbilityType = 'Basic' | 'Skill' | 'Ultimate' | 'Fua' | 'Technique' | 'Talent' | 'Dot' | 'Break' | 'Extra' | 'True';
 export type AbilityTarget = 'Single' | 'Blast' | 'Aoe'

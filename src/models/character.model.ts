@@ -16,6 +16,8 @@ export interface CharacterBase extends UnitBase {
     maxEnergy: number;
     currentEnergy: number;
     err: number;
+    cr: number;
+    cdmg: number;
 
     lc?: LightCone;
 }

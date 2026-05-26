@@ -1,3 +1,5 @@
+//src\models\abiltiy.model.ts
+
 import { Modifier } from "./modifier.model";
 import { type AbilityType } from "./type";
 
