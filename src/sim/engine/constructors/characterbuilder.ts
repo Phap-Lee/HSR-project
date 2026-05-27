@@ -1,7 +1,7 @@
 //src\sim\engine\characterbuilder.ts
 
-import { CharacterBase } from "../../models/character.model";
-import { LightCone } from "../../models/lightcone.model";
+import { CharacterBase } from "../../../models/character.model";
+import { LightCone } from "../../../models/lightcone.model";
 
 type CharacterConstructor = new (
     level?: number,
