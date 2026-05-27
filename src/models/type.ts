@@ -107,6 +107,9 @@ export type Level =
 | '60+' | 70
 | '70+' | 80;
 
+export type AbilityLevel =
+1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
 // Level Stats
 export type LevelStats = {
     hp: number;

@@ -11,19 +11,23 @@ export function getTotalsForStat(unit: UnitBase, stat: StatKey): Totals {
 
   return [...mods, ...traces].reduce(
     (acc, item) => {
-      if (item.type === 'flat') acc.flat += item.value;
-      else acc.percent += item.value;
-      return acc;
+        if (item.type === 'flat') acc.flat += item.value;
+        else acc.percent += item.value;
+        return acc;
     },
     { flat: 0, percent: 0 }
   );
 }
 
 export function getEffectiveStat(unit: UnitBase, stat: StatKey, baseValue: number) {
-  const { flat, percent } = getTotalsForStat(unit, stat);
-  return Math.max(0, baseValue * (1 + percent / 100) + flat);
+    const { flat, percent } = getTotalsForStat(unit, stat);
+    return Math.max(0, baseValue * (1 + percent / 100) + flat);
 }
 
 export function getLevelNumber(level: Level): number {
-  return parseInt(String(level), 10);
+    return parseInt(String(level), 10);
+}
+
+export function SpChange(maxSp: number, spGain?: number, spDrain?: number) {
+    return maxSp + (spGain ?? 0) - (spDrain ?? 0)
 }

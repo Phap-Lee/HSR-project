@@ -1,10 +1,12 @@
 //src\models\abiltiy.model.ts
 
 import { Modifier } from "./modifier.model";
-import { type AbilityType } from "./type";
+import { AbilityLevel, AbilityTarget, type AbilityType } from "./type";
 
 export interface Ability {
     type: AbilityType[];
+    target: AbilityTarget;
+    level: AbilityLevel;
     hits?: AbilityHits[];
     total_multi?: number;
     total_toughnessDmg?: number;
