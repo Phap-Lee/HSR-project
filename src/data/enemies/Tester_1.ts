@@ -13,7 +13,7 @@ export class Tester implements EnemyBase {
     hp: number = 0;
     base_atk: number = 100;
     atk: number = 0;
-    base_def: number = 3000;
+    base_def: number = 300;
     def: number = 0;
     base_spd: number = 135;
     spd: number = 0;
