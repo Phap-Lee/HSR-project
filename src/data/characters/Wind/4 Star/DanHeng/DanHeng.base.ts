@@ -1,12 +1,11 @@
 //src\data\characters\Wind\4 Star\DanHeng\DanHeng.base.ts
 
-import { type Paths, type Elements, type Level, type StatKey, type StatType, type LevelStats, PathsEnum, DamageBonusGroup, ResPenGroup, DefenceIgnoreGroup } from '../../../../../models/type'
+import { type Paths, type Elements, type Level, type LevelStats, PathsEnum, DamageBonusGroup, ResPenGroup, DefenceIgnoreGroup } from '../../../../../models/type'
 import { CharacterBase, type TraceEntry } from "../../../../../models/character.model";
 import { LightCone } from '../../../../../models/lightcone.model';
 import { EnemyBase } from '../../../../../models/enemy.model';
 import { Modifier } from '../../../../../models/modifier.model';
-import * as utils from '../../../../../sim/utils/utils';
-import * as avHandler from '../../../../../sim/calculations/actionvalue';
+import { initializeCharacter } from '../../../../../sim/engine/constructors/characterinitializer';
 
 export const LEVEL_STATS: Record<Level, LevelStats> = {
     1: {hp: 120, atk: 774, def: 54},
@@ -23,6 +22,10 @@ export const LEVEL_STATS: Record<Level, LevelStats> = {
     70: {hp: 774, atk: 479, def: 348},
     '70+': {hp: 822, atk: 509, def: 369},
     80: {hp: 882, atk: 546, def: 396}
+}
+
+export function createDanHengCharacter(level: Level = 1, lc?: LightCone): CharacterBase {
+    return new Dan_Heng(level, lc);
 }
 
 export class Dan_Heng implements CharacterBase {
@@ -70,48 +73,6 @@ export class Dan_Heng implements CharacterBase {
     lc: LightCone | undefined;
 
     constructor(level: Level = 1, lc?: LightCone) {
-        this.level = level;
-        const stats = LEVEL_STATS[level];
-        this.lc = lc;
-
-        this.base_hp = stats.hp + (this.lc?.hp ?? 0);
-        this.hp = utils.getEffectiveStat(this, 'Hp', this.base_hp);
-        this.base_atk = stats.atk + (this.lc?.atk ?? 0);
-        this.atk = utils.getEffectiveStat(this, 'Atk', this.base_atk);
-        this.base_def = stats.def + (this.lc?.def ?? 0);
-        this.def = utils.getEffectiveStat(this, 'Def', this.base_def);
-        this.spd = utils.getEffectiveStat(this, 'Spd', this.base_spd);
-        this.base_av = avHandler.ActionValueSetter(this);
-        this.current_av = this.base_av;
-
-        const windBonus = utils.getTotalsForStat(this, 'Wind_DMG_Bonus').percent;
-
-        this.damageBonuses = {
-            all: 0,
-            basic: 0,
-            skill: 0,
-            ultimate: 0,
-            fua: 0,
-            dot: 0,
-            element: { [this.element]: windBonus }
-        };
-
-        this.resPen = {
-            all: 0,
-            element: { [this.element]: 0 }
-        };
-
-        this.defIgnore = {
-            all: 0,
-            basic: 0,
-            skill: 0,
-            ultimate: 0,
-            fua: 0,
-            dot: 0,
-            element: { [this.element]: 0 }
-        }
-
-        this.taunt = this.base_taunt  * (1 + (this.taunt_multi / 100));
-        this.currentEnergy = this.maxEnergy / 2;
+        initializeCharacter(this, level, lc, { levelStats: LEVEL_STATS });
     }
 }

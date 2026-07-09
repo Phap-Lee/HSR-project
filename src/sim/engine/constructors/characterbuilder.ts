@@ -2,15 +2,16 @@
 
 import { CharacterBase } from "../../../models/character.model";
 import { LightCone } from "../../../models/lightcone.model";
+import type { Level } from "../../../models/type";
 
-type CharacterConstructor = new (
-    level?: number,
+export type CharacterConstructor = new (
+    level?: Level,
     lc?: LightCone
 ) => CharacterBase;
 
 export class CharacterBuilder {
     private characterClass?: CharacterConstructor;
-    private level?: number;
+    private level?: Level;
     private lc?: LightCone;
 
     setCharacterClass(characterClass: CharacterConstructor): this {
@@ -18,7 +19,7 @@ export class CharacterBuilder {
         return this;
     }
 
-    setLevel(level: number): this {
+    setLevel(level: Level): this {
         this.level = level;
         return this;
     }
@@ -38,7 +39,7 @@ export class CharacterBuilder {
 
 export function CharacterFactory(
     characterclass: CharacterConstructor,
-    level: number,
+    level: Level,
     lc?: LightCone
 ): CharacterBase {
     return new CharacterBuilder()
