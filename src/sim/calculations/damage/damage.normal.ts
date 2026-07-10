@@ -5,20 +5,31 @@ import { CharacterBase } from "../../../models/character.model";
 import { EnemyBase } from "../../../models/enemy.model";
 import { StatKey } from "../../../models/type";
 import { UnitBase } from "../../../models/unit.model";
-import { getLevelNumber, getTotalsForStat } from "../../utils/utils";
+import { getLevelNumber, getTotalsForStat, getEffectiveStat } from "../../utils/utils";
 import { isBroken } from "./damage.toughness";
 
 function BaseDamage(unit: UnitBase, stat: StatKey, ability_mult: number, extra_dmg = 0): number {
+    let baseValue = 0;
     switch (stat) {
         case 'Hp':
-            return unit.base_hp * ability_mult + extra_dmg;
+            baseValue = unit.base_hp;
+            break;
         case 'Atk':
-            return unit.base_atk * ability_mult + extra_dmg;
+            baseValue = unit.base_atk;
+            break;
         case 'Def':
-            return unit.base_def * ability_mult + extra_dmg;
+            baseValue = unit.base_def;
+            break;
         default:
             return 0;
     }
+
+    const effective = getEffectiveStat(unit, stat, baseValue);
+    return effective * ability_mult + extra_dmg;
+}
+
+function normalizeAbilityMultiplier(multiplier: number): number {
+    return multiplier > 1 ? multiplier / 100 : multiplier;
 }
 
 function DamageBonusFinder(unit: CharacterBase, ability: Ability):number {
@@ -152,7 +163,8 @@ export function FullDamage(
 ): number {
     const canCrit = !abiltiy.type.includes('Dot');
     const migigations = target.migigations;
-    const baseDmg = BaseDamage(attacker, stat, extra_dmg);
+    const abilityMultiplier = normalizeAbilityMultiplier(ogDmgMult || (abiltiy.total_multi ?? 0));
+    const baseDmg = BaseDamage(attacker, stat, abilityMultiplier, extra_dmg);
     const critMult = getCritMultiplier(
         canCrit,
         attacker.cdmg,

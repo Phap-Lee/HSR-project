@@ -2,10 +2,13 @@
 
 import { type Paths, type Elements, type Level, type LevelStats, PathsEnum, DamageBonusGroup, ResPenGroup, DefenceIgnoreGroup } from '../../../../../models/type'
 import { CharacterBase, type TraceEntry } from "../../../../../models/character.model";
+import type { Ability } from '../../../../../models/abiltiy.model';
 import { LightCone } from '../../../../../models/lightcone.model';
 import { EnemyBase } from '../../../../../models/enemy.model';
 import { Modifier } from '../../../../../models/modifier.model';
+import { AbilityFactory } from '../../../../../sim/engine/constructors/abilitybuilder';
 import { initializeCharacter } from '../../../../../sim/engine/constructors/characterinitializer';
+import { Dan_Heng_Basic } from './DanHeng.basic';
 
 export const LEVEL_STATS: Record<Level, LevelStats> = {
     1: {hp: 120, atk: 774, def: 54},
@@ -70,9 +73,11 @@ export class Dan_Heng implements CharacterBase {
     ];
     modifiers: Modifier<CharacterBase | EnemyBase, CharacterBase | EnemyBase>[] = [];
 
+    abilities: Ability[] = [];
     lc: LightCone | undefined;
 
     constructor(level: Level = 1, lc?: LightCone) {
         initializeCharacter(this, level, lc, { levelStats: LEVEL_STATS });
+        this.abilities = [AbilityFactory(Dan_Heng_Basic, 1)];
     }
 }
