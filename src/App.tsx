@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { createCharacterFromRegistry } from './data/characters/character.registry';
+import { createEnemyFromRegistry } from './data/enemies/enemy.registry';
 import { Adversarial, Arrows, DartingArrow } from './data/lightcones/Hunt';
 import type { LightCone } from './models/lightcone.model';
 import type { Modifier } from './models/modifier.model';
 import type { EnemyBase } from './models/enemy.model';
-import { EnemyBuilder } from './sim/engine/constructors/enemybuilder';
 import { FullDamage } from './sim/calculations/damage/damage.normal';
 
 const lightconeConstructors: Record<string, new () => LightCone> = {
@@ -13,13 +13,8 @@ const lightconeConstructors: Record<string, new () => LightCone> = {
   DartingArrow,
 };
 
-function buildEnemy(level: 80 | 90): EnemyBase {
-  return new EnemyBuilder()
-    .setBasics('tester_01', 'Tester Enemy', level)
-    .setBaseStats(10000, 100, 300, level === 90 ? 140 : 135)
-    .setToughness(100)
-    .setWeakness(['Physical', 'Quantum', 'Lightning'])
-    .build();
+function buildEnemy(id: string, level: 80 | 90 = 80): EnemyBase {
+  return createEnemyFromRegistry(id, level);
 }
 
 function buildCharacter(id: string, selectedLightCone: string, buffs: Modifier[]) {
@@ -36,6 +31,14 @@ function buildCharacter(id: string, selectedLightCone: string, buffs: Modifier[]
   return character;
 }
 
+type EnemySlot = {
+  id: string;
+  enemyId: string;
+  level: 80 | 90;
+  hp?: number;
+  toughness?: number;
+};
+
 type CharacterSlot = {
   id: string;
   characterId: string;
@@ -44,7 +47,23 @@ type CharacterSlot = {
 };
 
 function App() {
-  const [enemyTeam, setEnemyTeam] = useState<EnemyBase[]>(() => [buildEnemy(80)]);
+  // Helper to initialize an enemy slot with base stats
+  const createEnemySlot = (enemyId: string, level: 80 | 90 = 80): EnemySlot => {
+    const enemy = buildEnemy(enemyId, level);
+    return {
+      id: `enemy_${Math.random()}`,
+      enemyId,
+      level,
+      hp: enemy.hp,
+      toughness: enemy.toughness,
+    };
+  };
+
+  const [enemyTeam, setEnemyTeam] = useState<EnemySlot[]>(() => [
+    createEnemySlot('tester_1', 80),
+    createEnemySlot('tester_2', 90),
+    createEnemySlot('tester_3', 80),
+  ]);
   const [characterTeam, setCharacterTeam] = useState<CharacterSlot[]>(() => [
     { id: 'slot_0', characterId: 'dan_heng', lightCone: '', buffs: [] }
   ]);
@@ -76,7 +95,8 @@ function App() {
   const handleBasicAttack = () => {
     const slot = characterTeam[selectedCharacterSlot];
     const character = buildCharacter(slot.characterId, slot.lightCone, slot.buffs);
-    const enemy = enemyTeam[selectedEnemyIndex];
+    const enemySlot = enemyTeam[selectedEnemyIndex];
+    const enemy = buildEnemy(enemySlot.enemyId, enemySlot.level);
     const basicAbility = character.abilities?.[0];
 
     if (!basicAbility) return;
@@ -113,8 +133,17 @@ function App() {
     return buildCharacter(slot.characterId, slot.lightCone, slot.buffs);
   };
 
+  const getEnemyDisplay = (slot: EnemySlot) => {
+    const baseEnemy = buildEnemy(slot.enemyId, slot.level);
+    return {
+      ...baseEnemy,
+      hp: slot.hp ?? baseEnemy.hp,
+      toughness: slot.toughness ?? baseEnemy.toughness,
+    };
+  };
+
   const currentCharacter = getCharacterDisplay(characterTeam[selectedCharacterSlot]);
-  const currentEnemy = enemyTeam[selectedEnemyIndex];
+  const currentEnemy = getEnemyDisplay(enemyTeam[selectedEnemyIndex]);
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif', background: '#111827', minHeight: '100vh', color: '#f9fafb' }}>
@@ -125,34 +154,37 @@ function App() {
       <div style={{ marginTop: '2rem' }}>
         <h2 style={{ marginBottom: '1rem' }}>Enemy Team</h2>
         <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '1rem' }}>
-          {enemyTeam.map((enemy, index) => (
-            <div
-              key={index}
-              onClick={() => setSelectedEnemyIndex(index)}
-              style={{
-                minWidth: '280px',
-                padding: '1rem',
-                borderRadius: '12px',
-                background: selectedEnemyIndex === index ? '#374151' : '#1f2937',
-                border: selectedEnemyIndex === index ? '2px solid #60a5fa' : '1px solid #4b5563',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              <h3 style={{ marginTop: 0, marginBottom: '0.5rem' }}>{enemy.name}</h3>
-              <div style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
-                Lvl {enemy.level}
+          {enemyTeam.map((slot, index) => {
+            const enemy = getEnemyDisplay(slot);
+            return (
+              <div
+                key={index}
+                onClick={() => setSelectedEnemyIndex(index)}
+                style={{
+                  minWidth: '280px',
+                  padding: '1rem',
+                  borderRadius: '12px',
+                  background: selectedEnemyIndex === index ? '#374151' : '#1f2937',
+                  border: selectedEnemyIndex === index ? '2px solid #60a5fa' : '1px solid #4b5563',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <h3 style={{ marginTop: 0, marginBottom: '0.5rem' }}>{enemy.name}</h3>
+                <div style={{ fontSize: '0.9rem', color: '#9ca3af', marginBottom: '0.75rem' }}>
+                  Lvl {enemy.level}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <div><span style={{ color: '#9ca3af' }}>HP:</span> {Math.round(enemy.hp)}</div>
+                  <div><span style={{ color: '#9ca3af' }}>ATK:</span> {Math.round(enemy.atk)}</div>
+                  <div><span style={{ color: '#9ca3af' }}>DEF:</span> {Math.round(enemy.def)}</div>
+                  <div><span style={{ color: '#9ca3af' }}>SPD:</span> {Math.round(enemy.spd)}</div>
+                  <div><span style={{ color: '#9ca3af' }}>Tough:</span> {Math.round(enemy.toughness)}</div>
+                  <div><span style={{ color: '#9ca3af' }}>Weak:</span> {enemy.weakness[0]}</div>
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.85rem' }}>
-                <div><span style={{ color: '#9ca3af' }}>HP:</span> {Math.round(enemy.hp)}</div>
-                <div><span style={{ color: '#9ca3af' }}>ATK:</span> {Math.round(enemy.atk)}</div>
-                <div><span style={{ color: '#9ca3af' }}>DEF:</span> {Math.round(enemy.def)}</div>
-                <div><span style={{ color: '#9ca3af' }}>SPD:</span> {Math.round(enemy.spd)}</div>
-                <div><span style={{ color: '#9ca3af' }}>Tough:</span> {Math.round(enemy.toughness)}</div>
-                <div><span style={{ color: '#9ca3af' }}>Weak:</span> {enemy.weakness[0]}</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
