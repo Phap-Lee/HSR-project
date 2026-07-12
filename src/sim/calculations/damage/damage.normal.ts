@@ -172,7 +172,15 @@ export function FullDamage(
     );
     const dmgBoost = DamageBonusFinder(attacker, abiltiy);
     const weakenMult = 1 - (getWeaknessMultiplier(attacker) / 100);
-    const defMult = (getLevelNumber(attacker.level) + 20) / ((target.level + 20) * Math.max(0, 1 + (getTotalsForStat(target, 'Def').percent / 100) - (getDefenceDownTotal(target) / 100) - (getDefIgnoreTotal(attacker, abiltiy) / 100)) + getLevelNumber(attacker.level) + 20);
+    
+    // Calculate effective defense with modifiers and defense ignore
+    const targetDefense = getEffectiveStat(target, 'Def', target.base_def);
+    const defDown = getDefenceDownTotal(target) / 100;
+    const defIgnore = getDefIgnoreTotal(attacker, abiltiy) / 100;
+    const effectiveDefense = Math.max(0, targetDefense * (1 - defDown - defIgnore));
+    
+    const defMult = (getLevelNumber(attacker.level) + 20) / (getLevelNumber(attacker.level) + 20 + effectiveDefense);
+    
     const resMult = getResistanceMultiplier(attacker, target, abiltiy);
     const vulMult = getVulnerabilityMultiplier(attacker, target, abiltiy);
     const mitiMult = migigations.reduce(
