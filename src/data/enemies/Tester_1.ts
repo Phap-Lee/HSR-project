@@ -5,9 +5,10 @@ export class Tester {
     static create(): EnemyBase {
         return new EnemyBuilder()
             .setBasics('tester_01', 'Tester Enemy', 80)
-            .setBaseStats(10000, 100, 300, 135)
+            .setBaseStats(10000, 100, 1000, 135)
             .setToughness(100)
             .setWeakness(['Physical', 'Quantum', 'Lightning'])
+            .setResistances(['Physical', 'Quantum', 'Lightning'])
             .build();
     }
 }

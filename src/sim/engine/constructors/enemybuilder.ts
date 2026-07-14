@@ -41,8 +41,25 @@ export class EnemyBuilder {
     return this;
   }
 
-  setResistances(resistances: ResistanceGroup): this {
-    this.enemy.resistances = resistances;
+  setResistances(weakness: Elements[]): this {
+    this.enemy.weakness = weakness;
+    
+    // Set all non-weak elements to 20% resistance
+    const allElements: Elements[] = ['Fire', 'Ice', 'Imaginary', 'Physical', 'Quantum', 'Lightning', 'Wind'];
+    const resistantElements = allElements.filter(elem => !weakness.includes(elem));
+    
+    if (!this.enemy.resistances) {
+      this.enemy.resistances = { all: 0, element: {} };
+    }
+    
+    if (!this.enemy.resistances.element) {
+      this.enemy.resistances.element = {};
+    }
+    
+    resistantElements.forEach(elem => {
+      this.enemy.resistances!.element![elem] = 20;
+    });
+
     return this;
   }
 
@@ -119,6 +136,7 @@ export function createEnemy(
     .setBasics(id, name, level)
     .setBaseStats(baseHp, baseAtk, baseDef, baseSpd)
     .setToughness(baseToughness)
-    .setWeakness(weakness)
+    .setWeakness(weakness)  
+    .setResistances(weakness)
     .build();
 }

@@ -8,6 +8,7 @@ export class Tester2 {
             .setBaseStats(15000, 120, 350, 140)
             .setToughness(120)
             .setWeakness(['Fire', 'Wind', 'Imaginary'])
+            .setResistances(['Fire', 'Wind', 'Imaginary'])
             .build();
     }
 }

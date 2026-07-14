@@ -8,6 +8,7 @@ export class Tester3 {
             .setBaseStats(6000, 80, 250, 130)
             .setToughness(80)
             .setWeakness(['Ice', 'Lightning', 'Quantum'])
+            .setResistances(['Ice', 'Lightning', 'Quantum'])
             .build();
     }
 }
