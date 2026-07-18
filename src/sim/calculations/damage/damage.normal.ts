@@ -8,7 +8,7 @@ import { UnitBase } from "../../../models/unit.model";
 import { getLevelNumber, getTotalsForStat, getEffectiveStat } from "../../utils/utils";
 import { isBroken } from "./damage.toughness";
 
-function BaseDamage(unit: UnitBase, stat: StatKey, ability_mult: number, extra_dmg = 0): number {
+export function BaseDamage(unit: UnitBase, stat: StatKey, ability_mult: number, extra_dmg = 0): number {
     let baseValue = 0;
     switch (stat) {
         case 'Hp':
@@ -25,14 +25,10 @@ function BaseDamage(unit: UnitBase, stat: StatKey, ability_mult: number, extra_d
     }
 
     const effective = getEffectiveStat(unit, stat, baseValue);
-    return effective * ability_mult + extra_dmg;
+    return effective * ability_mult / 100 + extra_dmg;
 }
 
-function normalizeAbilityMultiplier(multiplier: number): number {
-    return multiplier > 1 ? multiplier / 100 : multiplier;
-}
-
-function DamageBonusFinder(unit: CharacterBase, ability: Ability):number {
+export function DamageBonusFinder(unit: CharacterBase, ability: Ability):number {
     const damageBonuses = unit.damageBonuses ?? {};
     const elemDmg = damageBonuses.element?.[unit.element] ?? 0;
     const allDmg = damageBonuses.all ?? 0;
@@ -57,19 +53,19 @@ function DamageBonusFinder(unit: CharacterBase, ability: Ability):number {
     return 1 + typeDmg + elemDmg + allDmg;
 }
 
-function rollCrit(critRate: number): boolean {
+export function rollCrit(critRate: number): boolean {
     const random = Math.random() * 100;
     return random < critRate;
 }
 
-function getCritMultiplier(canCrit: boolean, critDmg: number, rollCrit: boolean): number {
+export function getCritMultiplier(canCrit: boolean, critDmg: number, rollCrit: boolean): number {
     if (canCrit && rollCrit) {
         return 1 + (critDmg / 100);
     }
     return 1;
 }
 
-function getWeaknessMultiplier(unit: UnitBase): number {
+export function getWeaknessMultiplier(unit: UnitBase): number {
     const weakenModifiers = unit.modifiers.filter(
         (modifier) => modifier.stat === 'Weaken'
     );
@@ -80,7 +76,7 @@ function getWeaknessMultiplier(unit: UnitBase): number {
     return weakenMult;
 }
 
-function getDefenceDownTotal(unit: UnitBase): number {
+export function getDefenceDownTotal(unit: UnitBase): number {
     const defdownModifiers = unit.modifiers.filter(
         (modifier) => modifier.stat === 'Def_Down'
     );
@@ -91,7 +87,7 @@ function getDefenceDownTotal(unit: UnitBase): number {
     return defdownMult;
 }
 
-function getDefIgnoreTotal(unit: CharacterBase, ability: Ability): number {
+export function getDefIgnoreTotal(unit: CharacterBase, ability: Ability): number {
     const defIgnores = unit.defIgnore ?? {};
     const elemIgore = defIgnores.element?.[unit.element] ?? 0;
     const allDefIgnore = defIgnores.all ?? 0;
@@ -116,7 +112,18 @@ function getDefIgnoreTotal(unit: CharacterBase, ability: Ability): number {
     return typeIgnore + elemIgore + allDefIgnore;
 }
 
-function getResistanceMultiplier(attacker: CharacterBase, target: EnemyBase, ability: Ability): number {
+export function getDefMult(attacker: CharacterBase, ability: Ability, target: EnemyBase): number {
+    const targetDefense = getEffectiveStat(target, 'Def', target.base_def);
+    const defDown = getDefenceDownTotal(target) / 100;
+    const defIgnore = getDefIgnoreTotal(attacker, ability) / 100;
+    const effectiveDefense = Math.max(0, targetDefense * (1 - defDown - defIgnore));
+    
+    const defMult = (getLevelNumber(attacker.level) + 20) / (getLevelNumber(attacker.level) + 20 + effectiveDefense);
+
+    return defMult;
+}
+
+export function getResistanceMultiplier(attacker: CharacterBase, target: EnemyBase, ability: Ability): number {
     const resistances = target.resistances ?? {};
     const elemRes = resistances.element?.[attacker.element] ?? 0;
     const allRes = resistances.all ?? 0;
@@ -128,7 +135,7 @@ function getResistanceMultiplier(attacker: CharacterBase, target: EnemyBase, abi
     return 1 - (((allRes + elemRes) / 100) - ((allResPen + elemResPen) / 100));
 }
 
-function getVulnerabilityMultiplier(attacker: CharacterBase, target: EnemyBase, ability: Ability): number {
+export function getVulnerabilityMultiplier(attacker: CharacterBase, target: EnemyBase, ability: Ability): number {
     const vulnerabilities = target.vulnerability ?? {};
     const elemVul = vulnerabilities.element?.[attacker.element] ?? 0;
     const allVul = vulnerabilities.all ?? 0;
@@ -153,44 +160,52 @@ function getVulnerabilityMultiplier(attacker: CharacterBase, target: EnemyBase, 
     return 1 + (typeVul / 100) + (elemVul / 100) + (allVul / 100);
 }
 
+export interface DamageCalculationResult {
+    damage: number;
+    didCrit: boolean;
+    critMultiplier: number;
+}
+
 export function FullDamage(
     attacker: CharacterBase,
     target: EnemyBase,
     stat: StatKey,
     abiltiy: Ability,
-    extra_dmg = 0, 
-    ogDmgMult = 0,
-): number {
+    extra_dmg = 0,
+): DamageCalculationResult { // <-- Change return type from 'number' to your interface
     const canCrit = !abiltiy.type.includes('Dot');
     const migigations = target.migigations;
-    const abilityMultiplier = normalizeAbilityMultiplier(ogDmgMult || (abiltiy.total_multi ?? 0));
-    const baseDmg = BaseDamage(attacker, stat, abilityMultiplier, extra_dmg);
-    const critMult = getCritMultiplier(
-        canCrit,
-        attacker.cdmg,
-        rollCrit(attacker.cr)
-    );
+    const baseDmg = BaseDamage(attacker, stat, abiltiy.total_multi ?? 0, extra_dmg);
+    
+    // Roll crit ONCE and capture the boolean value
+    const critRolled = rollCrit(attacker.cr); 
+    const critMult = getCritMultiplier(canCrit, attacker.cdmg, critRolled);
+    
     const dmgBoost = DamageBonusFinder(attacker, abiltiy);
     const weakenMult = 1 - (getWeaknessMultiplier(attacker) / 100);
     
-    // Calculate effective defense with modifiers and defense ignore
     const targetDefense = getEffectiveStat(target, 'Def', target.base_def);
     const defDown = getDefenceDownTotal(target) / 100;
     const defIgnore = getDefIgnoreTotal(attacker, abiltiy) / 100;
     const effectiveDefense = Math.max(0, targetDefense * (1 - defDown - defIgnore));
     
     const defMult = (getLevelNumber(attacker.level) + 20) / (getLevelNumber(attacker.level) + 20 + effectiveDefense);
-    
     const resMult = getResistanceMultiplier(attacker, target, abiltiy);
     const vulMult = getVulnerabilityMultiplier(attacker, target, abiltiy);
-    const mitiMult = migigations.reduce(
-        (prod, percent) => prod * (1 - percent / 100),
-        1
-    );
-    const brokenMult = 0.9;
+    const mitiMult = migigations.reduce((prod, percent) => prod * (1 - percent / 100), 1);
+    
+    let brokenMult = 0.9;
     if (isBroken(target)) {
-        const brokenMult = 1;
-    };
+        brokenMult = 1.0;
+    }
 
-    return baseDmg * critMult * dmgBoost * weakenMult * defMult * resMult * vulMult * mitiMult * brokenMult;
+    // Compute final damage using the rolled multiplier
+    const finalDamage = baseDmg * critMult * dmgBoost * weakenMult * defMult * resMult * vulMult * mitiMult * brokenMult;
+
+    // Return the detailed data payload
+    return {
+        damage: finalDamage,
+        didCrit: canCrit && critRolled,
+        critMultiplier: critMult
+    };
 }

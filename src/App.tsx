@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import './App.css';
 import { createCharacterFromRegistry } from './data/characters/character.registry';
 import { createEnemyFromRegistry } from './data/enemies/enemy.registry';
 import { Adversarial, Arrows, DartingArrow } from './data/lightcones/Hunt';
 import type { LightCone } from './models/lightcone.model';
 import type { Modifier } from './models/modifier.model';
 import type { EnemyBase } from './models/enemy.model';
-import { FullDamage } from './sim/calculations/damage/damage.normal';
+import * as DamageCalc from './sim/calculations/damage/damage.normal';
+import { isBroken } from './sim/calculations/damage/damage.toughness';
 
 const lightconeConstructors: Record<string, new () => LightCone> = {
   Adversarial,
@@ -46,6 +48,24 @@ type CharacterSlot = {
   buffs: Modifier[];
 };
 
+interface LogEntry {
+  id: string;
+  summary: string;
+  math: {
+    atk: number;
+    multiplier: number;
+    bonus: number;
+    def: number;
+    res: number;
+    vul: number;
+    broken: number;
+    didCrit: boolean;
+    critMultiplier: number;
+  };
+  damageBonusType: string;
+  totalDamage: number;
+}
+
 function App() {
   // Helper to initialize an enemy slot with base stats
   const createEnemySlot = (enemyId: string, level: 80 | 90 = 80): EnemySlot => {
@@ -69,7 +89,7 @@ function App() {
   ]);
   const [selectedCharacterSlot, setSelectedCharacterSlot] = useState(0);
   const [selectedEnemyIndex, setSelectedEnemyIndex] = useState(0);
-  const [actionLog, setActionLog] = useState<string[]>([]);
+  const [actionLog, setActionLog] = useState<LogEntry[]>([]);
 
   const handleAddBuff = () => {
     const slot = characterTeam[selectedCharacterSlot];
@@ -96,22 +116,33 @@ function App() {
     const slot = characterTeam[selectedCharacterSlot];
     const character = buildCharacter(slot.characterId, slot.lightCone, slot.buffs);
     const enemySlot = enemyTeam[selectedEnemyIndex];
-    const enemy = buildEnemy(enemySlot.enemyId, enemySlot.level);
+    const enemy = getEnemyDisplay(enemySlot);
     const basicAbility = character.abilities?.[0];
 
     if (!basicAbility) return;
 
-    const damage = FullDamage(
-      character,
-      enemy,
-      'Atk',
-      basicAbility,
-      0,
-      basicAbility.total_multi ?? 0
-    );
+    const dmgResult = DamageCalc.FullDamage(character, enemy, 'Atk', basicAbility, 0);
 
     const toughnessDamage = basicAbility.total_toughnessDmg ?? 0;
-    const actualDamage = Math.round(damage);
+    const actualDamage = Math.round(dmgResult.damage);
+
+    const newEntry: LogEntry = {
+      id: `${Date.now()}-${Math.random()}`,
+      summary: `${character.name} used ${basicAbility.type.join(' / ')} for ${actualDamage} damage`,
+      totalDamage: actualDamage,
+      damageBonusType: `${character.element} DMG Bonus`,
+      math: {
+        atk: character.atk,
+        multiplier: basicAbility.total_multi ?? 0,
+        bonus: character.damageBonuses?.element?.[character.element] ?? 0,
+        def: DamageCalc.getDefMult(character, basicAbility, enemy),
+        res: DamageCalc.getResistanceMultiplier(character, enemy, basicAbility),
+        vul: DamageCalc.getVulnerabilityMultiplier(character, enemy, basicAbility),
+        broken: isBroken(enemy) ? 1 : 0.9,
+        didCrit: dmgResult.didCrit,
+        critMultiplier: dmgResult.critMultiplier,
+      }
+    };
 
     setEnemyTeam((prev) => {
       const updated = [...prev];
@@ -123,10 +154,7 @@ function App() {
       return updated;
     });
 
-    setActionLog((previous) => [
-      `${character.name} used ${basicAbility.type.join(' / ')} for ${actualDamage} damage`,
-      ...previous,
-    ].slice(0, 8));
+    setActionLog((previous) => [newEntry, ...previous].slice(0, 8));
   };
 
   const getCharacterDisplay = (slot: CharacterSlot) => {
@@ -290,15 +318,52 @@ function App() {
           </button>
         </div>
 
-        {/* Combat Log */}
-        <div style={{ padding: '1.5rem', borderRadius: '16px', background: '#1f2937', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.25)' }}>
+        {/* Combat Log Container */}
+        <div style={{ padding: '1.5rem', borderRadius: '16px', background: '#1f2937', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.25)', color: '#e5e7eb' }}>
           <h3 style={{ marginTop: 0 }}>Combat Log</h3>
           {actionLog.length === 0 ? (
             <p style={{ color: '#9ca3af' }}>No actions yet.</p>
           ) : (
-            <ul style={{ paddingLeft: '1.2rem', color: '#e5e7eb', margin: 0, fontSize: '0.9rem' }}>
-              {actionLog.map((entry, index) => (
-                <li key={index} style={{ marginBottom: '0.5rem' }}>{entry}</li>
+            <ul style={{ paddingLeft: '1.2rem', margin: 0, fontSize: '0.9rem' }}>
+              {actionLog.map((entry) => (
+                <li key={entry.id} style={{ marginBottom: '0.8rem', position: 'relative' }}>
+                  
+                  {/* Main Log Entry with Hover Trigger */}
+                  <span className="log-summary">
+                    {entry.summary.split(String(entry.totalDamage))[0]}
+                    
+                    {/* The interactive damage number */}
+                    <span className="dmg-trigger" style={{ color: '#f87171', fontWeight: 'bold', cursor: 'help', borderBottom: '1px dashed #f87171' }}>
+                      {entry.totalDamage}
+                      
+                      {/* Tooltip Card contents */}
+                      <div className="dmg-tooltip">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #374151', paddingBottom: '4px', marginBottom: '8px' }}>
+                          <span style={{ fontWeight: 'bold' }}>Single Target</span>
+                          <span style={{ color: '#9ca3af', fontSize: '0.8rem' }}>Normal DMG • Basic ATK</span>
+                        </div>
+                        
+                        {/* Formula breakdown */}
+                        <div style={{ fontFamily: 'monospace', lineHeight: '1.6', fontSize: '0.85rem' }}>
+                          <span style={{ color: '#f87171', fontWeight: 'bold' }}>{entry.totalDamage}</span> = 
+                          (<span style={{ color: '#fbbf24' }}>{entry.math.atk} ATK</span> × <span style={{ fontWeight: 'bold' }}>{(entry.math.multiplier)}%</span>)
+                          × <span style={{ color: entry.math.didCrit ? '#f43f5e' : '#e5e7eb', fontWeight: entry.math.didCrit ? 'bold' : 'normal' }}>
+                            {entry.math.critMultiplier.toFixed(2)}CRIT
+                          </span> x 
+                          (1 + <span style={{ color: '#34d399' }}>{(entry.math.bonus).toFixed(1)}% BONUS</span>) × <span style={{ color: '#f59e0b' }}>{(entry.math.def * 100)} DEF</span> × <span style={{ color: '#22d3ee' }}>{(entry.math.res * 100)}% RES</span> × <span style={{ color: '#f87171' }}>{(entry.math.vul * 100)}% VUL</span> × <span style={{ color: '#a78bfa' }}>{(entry.math.broken * 100)}% BROKEN</span>
+                        </div>
+                        
+                        {/* Specific Stat Display */}
+                        <div style={{ marginTop: '8px', color: '#fbbf24', fontSize: '0.8rem' }}>
+                          {entry.damageBonusType}: {(entry.math.bonus).toFixed(1)}%
+                        </div>
+                      </div>
+
+                    </span>
+                    {entry.summary.split(String(entry.totalDamage))[1]}
+                  </span>
+                  
+                </li>
               ))}
             </ul>
           )}

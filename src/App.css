@@ -1,0 +1,34 @@
+/* Container rules to anchor the tooltip */
+.dmg-trigger {
+  position: relative;
+  display: inline-block;
+}
+
+/* Tooltip card styling matching the dark game UI theme */
+.dmg-trigger .dmg-tooltip {
+  visibility: hidden;
+  position: absolute;
+  z-index: 50;
+  bottom: 125%; /* Positions it right above the damage text */
+  left: 50%;
+  transform: translateX(-50%);
+  
+  width: 480px; /* Spacious room for long equation blocks */
+  background-color: #111827; /* Near black dark-slate background */
+  color: #f3f4f6;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+  
+  /* Smooth entry effect */
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+  pointer-events: none; /* Keeps it from accidentally triggering itself */
+}
+
+/* Display mechanics on mouse hover */
+.dmg-trigger:hover .dmg-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
