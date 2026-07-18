@@ -187,7 +187,7 @@ export function FullDamage(
     const targetDefense = getEffectiveStat(target, 'Def', target.base_def);
     const defDown = getDefenceDownTotal(target) / 100;
     const defIgnore = getDefIgnoreTotal(attacker, abiltiy) / 100;
-    const effectiveDefense = Math.max(0, targetDefense * (1 - defDown - defIgnore));
+    const effectiveDefense = Number(target.level) * Math.max(0,1 - defDown - defIgnore) + getLevelNumber(attacker.level) + 20;
     
     const defMult = (getLevelNumber(attacker.level) + 20) / (getLevelNumber(attacker.level) + 20 + effectiveDefense);
     const resMult = getResistanceMultiplier(attacker, target, abiltiy);
