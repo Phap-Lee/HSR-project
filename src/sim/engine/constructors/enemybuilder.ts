@@ -42,8 +42,6 @@ export class EnemyBuilder {
   }
 
   setResistances(weakness: Elements[]): this {
-    this.enemy.weakness = weakness;
-    
     // Set all non-weak elements to 20% resistance
     const allElements: Elements[] = ['Fire', 'Ice', 'Imaginary', 'Physical', 'Quantum', 'Lightning', 'Wind'];
     const resistantElements = allElements.filter(elem => !weakness.includes(elem));

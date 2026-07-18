@@ -8,6 +8,7 @@ import type { Modifier } from './models/modifier.model';
 import type { EnemyBase } from './models/enemy.model';
 import * as DamageCalc from './sim/calculations/damage/damage.normal';
 import { isBroken } from './sim/calculations/damage/damage.toughness';
+import { AbilityLevel } from './models/type';
 
 const lightconeConstructors: Record<string, new () => LightCone> = {
   Adversarial,
@@ -19,14 +20,18 @@ function buildEnemy(id: string, level: 80 | 90 = 80): EnemyBase {
   return createEnemyFromRegistry(id, level);
 }
 
-function buildCharacter(id: string, selectedLightCone: string, buffs: Modifier[]) {
+function buildCharacter(id: string, selectedLightCone: string, buffs: Modifier[], abilityLevels?: { basic: AbilityLevel }) {
   const lightCone = selectedLightCone
     ? new lightconeConstructors[selectedLightCone]()
     : undefined;
 
   const character = createCharacterFromRegistry(id, 80, lightCone);
   
-  // Apply all buffs to the character so damage calculations pick them up
+  if (character.abilities && character.abilities[0] && abilityLevels) {
+    const BasicAbilityClass = character.abilities[0].constructor as new (lvl: AbilityLevel) => any;
+    character.abilities[0] = new BasicAbilityClass(abilityLevels.basic);
+  }
+
   if (!character.modifiers) character.modifiers = [];
   character.modifiers.push(...buffs);
 
@@ -46,6 +51,11 @@ type CharacterSlot = {
   characterId: string;
   lightCone: string;
   buffs: Modifier[];
+  abilityLevels: {
+    basic: AbilityLevel;
+    skill: AbilityLevel;
+    ultimate: AbilityLevel;
+  }
 };
 
 interface LogEntry {
@@ -85,7 +95,13 @@ function App() {
     createEnemySlot('tester_3', 80),
   ]);
   const [characterTeam, setCharacterTeam] = useState<CharacterSlot[]>(() => [
-    { id: 'slot_0', characterId: 'dan_heng', lightCone: '', buffs: [] }
+    { 
+      id: 'slot_0', 
+      characterId: 'dan_heng', 
+      lightCone: '', 
+      buffs: [],
+      abilityLevels: { basic: 1, skill: 1, ultimate: 1 } // <-- Add this
+    }
   ]);
   const [selectedCharacterSlot, setSelectedCharacterSlot] = useState(0);
   const [selectedEnemyIndex, setSelectedEnemyIndex] = useState(0);
@@ -114,7 +130,7 @@ function App() {
 
   const handleBasicAttack = () => {
     const slot = characterTeam[selectedCharacterSlot];
-    const character = buildCharacter(slot.characterId, slot.lightCone, slot.buffs);
+    const character = buildCharacter(slot.characterId, slot.lightCone, slot.buffs, slot.abilityLevels);
     const enemySlot = enemyTeam[selectedEnemyIndex];
     const enemy = getEnemyDisplay(enemySlot);
     const basicAbility = character.abilities?.[0];
@@ -284,6 +300,37 @@ function App() {
             </label>
           </div>
 
+          {/* Ability Level Select Dropdown */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem', color: '#d1d5db' }}>
+              Basic Attack Level
+              <select
+                value={characterTeam[selectedCharacterSlot].abilityLevels?.basic ?? 1}
+                onChange={(event) => {
+                  const newLevel = Number(event.target.value) as AbilityLevel;
+                  setCharacterTeam((prev) => {
+                    const updated = [...prev];
+                    updated[selectedCharacterSlot] = {
+                      ...updated[selectedCharacterSlot],
+                      abilityLevels: {
+                        ...updated[selectedCharacterSlot].abilityLevels,
+                        basic: newLevel,
+                      },
+                    };
+                    return updated;
+                  });
+                }}
+                style={{ padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #4b5563', background: '#111827', color: 'white' }}
+              >
+                {[1, 2, 3, 4, 5, 6, 7].map((lvl) => (
+                  <option key={lvl} value={lvl}>
+                    Lv. {lvl}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
           <button
             onClick={handleAddBuff}
             style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', background: '#60a5fa', color: 'white', cursor: 'pointer', fontWeight: 700, width: '100%' }}
@@ -350,7 +397,7 @@ function App() {
                           × <span style={{ color: entry.math.didCrit ? '#f43f5e' : '#e5e7eb', fontWeight: entry.math.didCrit ? 'bold' : 'normal' }}>
                             {entry.math.critMultiplier.toFixed(2)}CRIT
                           </span> x 
-                          (1 + <span style={{ color: '#34d399' }}>{(entry.math.bonus).toFixed(1)}% BONUS</span>) × <span style={{ color: '#f59e0b' }}>{(entry.math.def * 100)} DEF</span> × <span style={{ color: '#22d3ee' }}>{(entry.math.res * 100)}% RES</span> × <span style={{ color: '#f87171' }}>{(entry.math.vul * 100)}% VUL</span> × <span style={{ color: '#a78bfa' }}>{(entry.math.broken * 100)}% BROKEN</span>
+                          (1 + <span style={{ color: '#34d399' }}>{(entry.math.bonus).toFixed(1)}% BONUS</span>) × <span style={{ color: '#f59e0b' }}>{(entry.math.def * 100)}% DEF</span> × <span style={{ color: '#22d3ee' }}>{(entry.math.res * 100)}% RES</span> × <span style={{ color: '#f87171' }}>{(entry.math.vul * 100)}% VUL</span> × <span style={{ color: '#a78bfa' }}>{(entry.math.broken * 100)}% BROKEN</span>
                         </div>
                         
                         {/* Specific Stat Display */}
