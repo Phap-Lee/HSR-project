@@ -8,8 +8,10 @@ import { type StatType, type StatKey } from "./type";
 export interface Modifier<T1 extends CharacterBase | EnemyBase = CharacterBase | EnemyBase, T2 extends CharacterBase | EnemyBase = CharacterBase | EnemyBase> {
     caster: string;
     target: string;
+    buffid: string;
     stat: StatKey;
     type: StatType;
     value: number;
     turns: number;
+    new?: boolean;
 }

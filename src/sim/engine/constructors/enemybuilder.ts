@@ -101,6 +101,7 @@ export class EnemyBuilder {
     this.enemy.modifiers.push({
       caster: this.enemy.id,
       target: this.enemy.id,
+      buffid: 'enemy_speed_modifier',
       stat: 'Spd',
       type: 'percent',
       value: spdMulti,

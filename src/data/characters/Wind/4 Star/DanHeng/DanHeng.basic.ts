@@ -32,10 +32,11 @@ export class Dan_Heng_Basic implements Ability {
 
         const totalValue = this.hits.reduce((sum, hit) => sum + hit.value, 0);
         
-        for (const hit of this.hits) {
-            hit.multi = (hit.value / totalValue) * this.total_multi;
-            hit.toughnessDmg = (hit.value / totalValue) * this.total_toughnessDmg;
-            hit.energy = (hit.value / totalValue) * this.total_energy;
-        }
+        this.hits = this.hits.map(hit => ({
+            ...hit,
+            multi: (hit.value / totalValue) * this.total_multi,
+            toughnessDmg: (hit.value / totalValue) * this.total_toughnessDmg!,
+            energy: (hit.value / totalValue) * this.total_energy
+        }));
     }
 }

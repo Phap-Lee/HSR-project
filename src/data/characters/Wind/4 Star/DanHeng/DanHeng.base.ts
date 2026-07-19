@@ -49,7 +49,7 @@ export class Dan_Heng implements CharacterBase {
     base_av: number = 0;
     current_av: number = 0;
 
-    cr: number = 5;
+    cr: number = 50;
     cdmg: number = 50;
 
     damageBonuses?: DamageBonusGroup | undefined;
@@ -74,7 +74,7 @@ export class Dan_Heng implements CharacterBase {
     modifiers: Modifier<CharacterBase | EnemyBase, CharacterBase | EnemyBase>[] = [];
 
     abilities: Ability[] = [];
-    lc: LightCone | undefined;
+    lc?: LightCone;
 
     constructor(level: Level = 1, lc?: LightCone) {
         initializeCharacter(this, level, lc, { levelStats: LEVEL_STATS });

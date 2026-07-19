@@ -5,7 +5,7 @@ export class Tester3 {
     static create(): EnemyBase {
         return new EnemyBuilder()
             .setBasics('tester_03', 'Tester Enemy 3', 80)
-            .setBaseStats(6000, 80, 250, 130)
+            .setBaseStats(800, 80, 250, 130)
             .setToughness(80)
             .setWeakness(['Ice', 'Lightning', 'Quantum'])
             .setResistances(['Ice', 'Lightning', 'Quantum'])
