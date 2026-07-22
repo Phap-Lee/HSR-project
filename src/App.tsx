@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import { createCharacterFromRegistry } from './data/characters/character.registry';
 import { createEnemyFromRegistry } from './data/enemies/enemy.registry';
@@ -64,8 +64,8 @@ type EnemySlot = {
   id: string;
   enemyId: string;
   level: 80 | 90;
-  hp?: number;
-  toughness?: number;
+  hp: number;
+  toughness: number;
 };
 
 type CharacterSlot = {
@@ -174,6 +174,26 @@ function App() {
   const [timeline, setTimeline] = useState<CombatUnit[]>([]);
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
 
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+
+  useEffect(() => {
+    // Tell TypeScript to automatically use whatever type setTimeout returns!
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const allEnemiesDead = enemyTeam.every(e => e.hp <= 0);
+    if (!isAutoPlaying || allEnemiesDead) {
+      if (allEnemiesDead && isAutoPlaying) setIsAutoPlaying(false); 
+      return;
+    }
+
+    timeoutId = setTimeout(() => {
+      executeAutoTurn();
+    }, 500); 
+
+    return () => clearTimeout(timeoutId);
+    
+  }, [isAutoPlaying, timeline, enemyTeam, characterTeam]);
+
   const getCharacterDisplay = (slot: CharacterSlot) => {
     return buildCharacter(slot.characterId, slot.lightCone, slot.buffs, slot.abilityLevels);
   };
@@ -233,6 +253,42 @@ function App() {
       setActiveUnitId(startedQueue[0].uid);
     }
     setBattleStarted(true);
+  };
+
+  const executeAutoTurn = () => {
+    if (timeline.length === 0) return;
+    
+    const activeUnit = timeline[0]; // The unit whose AV reached 0
+
+    if (activeUnit.isEnemy) {
+      // --- ENEMY AI ---
+      // If you have a handleEnemyAttack function, call it here.
+      // Otherwise, just end their turn for now so the loop doesn't get stuck.
+      endTurn(activeUnit.uid, null); 
+      
+      setActionLog((prev) => [{
+        id: `enemy_turn_${Date.now()}`,
+        summary: `Enemy took a turn!`,
+        damageBonusType: 'None',
+      }, ...prev].slice(0, 8));
+
+    } else {
+      // --- ALLY AI ---
+      // 1. Find the character in the team array
+      const charIndex = characterTeam.findIndex(c => c.id === activeUnit.uid);
+      
+      // 2. Auto-Target the first living enemy
+      const targetEnemyIndex = enemyTeam.findIndex(e => e.hp && e.hp > 0);
+      
+      if (charIndex !== -1 && targetEnemyIndex !== -1) {
+        // Temporarily set the selections so your existing handleBasicAttack works
+        setSelectedCharacterSlot(charIndex);
+        setSelectedEnemyIndex(targetEnemyIndex);
+        
+        // Fire the attack!
+        handleBasicAttack(); 
+      }
+    }
   };
 
   // Modified to handle unit deaths dynamically
@@ -448,6 +504,10 @@ function App() {
 
   const currentCharacter = getCharacterDisplay(characterTeam[selectedCharacterSlot]);
   const currentEnemy = enemyTeam.length > 0 ? getEnemyDisplay(enemyTeam[selectedEnemyIndex]) : null;
+  
+  // ==========================================
+  // HTML RENDER
+  // ==========================================
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif', background: '#111827', minHeight: '100vh', color: '#f9fafb' }}>
@@ -676,19 +736,20 @@ function App() {
             </div>
           ))}
 
-          <button
-            disabled={!battleStarted || enemyTeam.length === 0 || activeUnitId !== characterTeam[selectedCharacterSlot].id}
-            onClick={handleBasicAttack}
-            style={{ 
-              marginTop: '1rem', padding: '0.75rem 1rem', borderRadius: '8px', border: 'none', 
-              background: (!battleStarted || enemyTeam.length === 0 || activeUnitId !== characterTeam[selectedCharacterSlot].id) ? '#4b5563' : '#f59e0b', 
-              color: 'white', 
-              cursor: (!battleStarted || enemyTeam.length === 0 || activeUnitId !== characterTeam[selectedCharacterSlot].id) ? 'not-allowed' : 'pointer', 
-              fontWeight: 700, width: '100%',
-              transition: 'background 0.3s'
+          <button 
+            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: isAutoPlaying ? '#f87171' : '#4ade80', // Red for Stop, Green for Start
+              color: '#111827',
+              fontWeight: 'bold',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              width: '100%'
             }}
           >
-            {!battleStarted ? 'Start Battle to Attack' : (enemyTeam.length === 0 ? 'Battle Complete' : (activeUnitId !== characterTeam[selectedCharacterSlot].id ? 'Waiting for Turn...' : 'Use Basic Attack'))}
+            {isAutoPlaying ? '⏹ Stop Auto-Battle' : '▶ Start Auto-Battle'}
           </button>
         </div>
 
